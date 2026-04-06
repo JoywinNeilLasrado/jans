@@ -1,0 +1,10 @@
+{
+  "applicationName": "saml",
+  "samlTrustRelationshipDn": "ou=trustRelationships,o=jans",
+  "idpRootDir": "/opt/jans/idp/",
+  "spMetadataDir": "/opt/idp/configs/keycloak/sp/metadata",
+  "spMetadataTempDir": "/opt/idp/configs/keycloak/sp/temp_metadata",
+  "spMetadataFile": "sp-metadata.xml",
+  "setConfigDefaultValue": "true"
+  
+}
