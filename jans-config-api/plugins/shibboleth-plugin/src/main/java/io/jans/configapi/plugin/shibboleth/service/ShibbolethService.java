@@ -101,6 +101,38 @@ public class ShibbolethService {
         return persistenceEntryManager.contains(dn, TrustRelationship.class);
     }
     
+    public TrustRelationship getTrustRelationshipByDn(String dn) {
+        try {
+            return persistenceEntryManager.find(TrustRelationship.class, dn);
+        } catch (Exception e) {
+            logger.warn("", e);
+            return null;
+        }
+    }
+    
+
+    public TrustRelationship getTrustRelationshipByInum(String inum) {
+        TrustRelationship result = null;
+        try {
+            result = persistenceEntryManager.find(TrustRelationship.class, getDnForTrustRelationship(inum));
+        } catch (Exception ex) {
+            logger.error("Failed to load TrustRelationship entry", ex);
+        }
+        return result;
+    }
+
+
+    public List<TrustRelationship> getAllTrustRelationshipByDisplayName(String name) {
+        logger.info("Search TrustRelationship with name:{}", name);
+
+        String[] targetArray = new String[] { name };
+        Filter displayNameFilter = Filter.createEqualityFilter(AttributeConstants.DISPLAY_NAME, targetArray);
+        logger.debug("Search TrustRelationship with displayNameFilter:{}", displayNameFilter);
+        return persistenceEntryManager.findEntries(getDnForTrustRelationship(null), TrustRelationship.class,
+                displayNameFilter);
+    }
+    
+    
     public List<TrustRelationship> searchTrustRelationship(String pattern, int sizeLimit) {
 
         logger.debug("Search TrustRelationship with pattern:{}, sizeLimit:{}", pattern, sizeLimit);
@@ -172,17 +204,10 @@ public class ShibbolethService {
                 : ApiConstants.DEFAULT_MAX_COUNT);
     }
 
-    public TrustRelationship getTrustRelationshipByDn(String dn) {
-        try {
-            return persistenceEntryManager.find(TrustRelationship.class, dn);
-        } catch (Exception e) {
-            logger.warn("", e);
-            return null;
-        }
-    }
+
     
     public TrustRelationship addTrustRelationship(TrustRelationship trustRelationship, InputStream file)
-     {
+            throws IOException {
         logger.info("Add new trustRelationship:{}, file:{}", trustRelationship, file);
 
         setTrustRelationshipDefaultValue(trustRelationship, false);
@@ -191,7 +216,7 @@ public class ShibbolethService {
         if (file != null && file.available() > 0) {
             saveSpMetaDataFileSourceTypeFile(trustRelationship, file);
         }else {
-            trustRelationship.setSpMetaDataFN(null);
+            //trustRelationship.setSpMetaDataFN(null);
         }
         
         persistenceEntryManager.merge(trustRelationship);
@@ -222,6 +247,19 @@ public class ShibbolethService {
             log.error("Failed to save SP metadata file for TrustRelationship ' {} '",trustRelationship.getInum());
             return false;
         }
+    }
+    
+    public String getSpNewMetadataFileName(TrustRelationship trustRel) {
+        return getSpNewMetadataFileName(trustRel.getInum());
+    }
+
+    public String getSpNewMetadataFileName(String inum) {
+        logger.info("Generate SP Metadata FileName with inum:{}",inum);
+        String relationshipInum = StringHelper.removePunctuation(inum);
+        logger.info("inum after remove punctuation is:{}",relationshipInum);
+        
+        //TO-DO LAter
+        //return String.format(samlConfigService.getSpMetadataFilePattern(), relationshipInum);
     }
     
     //----------------

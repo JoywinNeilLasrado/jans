@@ -20,6 +20,7 @@ public class SearchRequest {
     private String sortOrder;
     private Integer startIndex;
     private Integer count;
+    private Integer page;
     private int maxCount;
     private List<String> filterAttributeName;
     private List<String> filterAssertionValue;
@@ -111,6 +112,14 @@ public class SearchRequest {
     public void setCount(Integer count) {
         this.count = count;
     }
+    
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
 
     public String getAttributesStr() {
         return attributes == null ? null : attributes.stream().collect(Collectors.joining(","));
@@ -172,8 +181,9 @@ public class SearchRequest {
     public String toString() {
         return "SearchRequest [entityClass=" + entityClass + ", schemas=" + schemas + ", attributes=" + attributes
                 + ", excludedAttributes=" + excludedAttributes + ", filter=" + filter + ", sortBy=" + sortBy
-                + ", sortOrder=" + sortOrder + ", startIndex=" + startIndex + ", count=" + count + ", maxCount="
-                + maxCount + ", filterAttributeName=" + filterAttributeName + ", filterAssertionValue="
+                + ", sortOrder=" + sortOrder + ", startIndex=" + startIndex + ", count=" + count 
+                + ", page=" +page+" ,maxCount="+ maxCount  
+                + ", filterAttributeName=" + filterAttributeName + ", filterAssertionValue="
                 + filterAssertionValue + ", fieldFilterData=" + fieldFilterData + ", attributesStr=" + attributesStr
                 + ", excludedAttributesStr=" + excludedAttributesStr 
                 + ",fieldValueMap=" + fieldValueMap

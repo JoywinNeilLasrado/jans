@@ -52,6 +52,9 @@ public class TrustRelationship extends Entry implements Serializable {
     @Schema(description = "Trust Relationship attributes that will be released to SAML server.")
     private List<String> releasedAttributes;
     
+    @AttributeName(name = "jansStatus")
+    private Status status;
+    
     @AttributeName
     @Schema(description = "Trust Relationship version")
     private String version;
@@ -108,6 +111,14 @@ public class TrustRelationship extends Entry implements Serializable {
         this.releasedAttributes = releasedAttributes;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public String getVersion() {
         return version;
     }
@@ -128,7 +139,11 @@ public class TrustRelationship extends Entry implements Serializable {
     public String toString() {
         return "TrustRelationship [inum=" + inum + ", displayName=" + displayName + ", description=" + description
                 + ", entityType=" + entityType + ", metadataSource=" + metadataSource + ", releasedAttributes="
-                + releasedAttributes + ", version=" + version + ", lastSyncedVersion=" + lastSyncedVersion + "]";
+                + releasedAttributes + ", status=" + status + ", version=" + version + ", lastSyncedVersion="
+                + lastSyncedVersion + "]";
     }
+
     
+
+   
 }
