@@ -8,6 +8,7 @@ import io.jans.configapi.plugin.shibboleth.model.ShibbolethIdpConfiguration;
 import io.jans.configapi.plugin.shibboleth.model.ShibbolethIdpConfigurationProperties;
 import io.jans.configapi.plugin.shibboleth.model.TrustRelationship;
 import io.jans.configapi.plugin.shibboleth.model.TrustedServiceProvider;
+import io.jans.configapi.plugin.shibboleth.util.Constants;
 
 import io.jans.configapi.util.ApiConstants;
 import io.jans.model.SearchRequest;
@@ -20,9 +21,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import org.slf4j.Logger;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +50,12 @@ public class ShibbolethService {
     @Inject
     private PersistenceEntryManager persistenceEntryManager;
     
-
+    @Inject
+    ShibbolethConfigService shibbolethConfigService;
+    
+    @Inject 
+    ShibbolethDocumentService shibbolethDocumentService;
+    
 
     public ShibbolethIdpConfiguration getConfiguration() {
         logger.debug("Fetching Shibboleth IDP configuration");
@@ -108,8 +111,7 @@ public class ShibbolethService {
             logger.warn("", e);
             return null;
         }
-    }
-    
+    }    
 
     public TrustRelationship getTrustRelationshipByInum(String inum) {
         TrustRelationship result = null;
@@ -120,7 +122,6 @@ public class ShibbolethService {
         }
         return result;
     }
-
 
     public List<TrustRelationship> getAllTrustRelationshipByDisplayName(String name) {
         logger.info("Search TrustRelationship with name:{}", name);
@@ -203,9 +204,7 @@ public class ShibbolethService {
                 ? configurationFactory.getApiAppConfiguration().getMaxCount()
                 : ApiConstants.DEFAULT_MAX_COUNT);
     }
-
-
-    
+   
     public TrustRelationship addTrustRelationship(TrustRelationship trustRelationship, InputStream file)
             throws IOException {
         logger.info("Add new trustRelationship:{}, file:{}", trustRelationship, file);
@@ -231,20 +230,20 @@ public class ShibbolethService {
     
     private boolean saveSpMetaDataFileSourceTypeFile(TrustRelationship trustRelationship, InputStream file) {
 
-        log.debug("saveSpMetadataFileSourceTypeFile(). trustRelationship: {} . file: {}",trustRelationship,file);
+        logger.debug("saveSpMetadataFileSourceTypeFile(). trustRelationship: {} . file: {}",trustRelationship,file);
     
         final String spMetadataFileName = getSpNewMetadataFileName(trustRelationship);
-        trustRelationship.setSpMetaDataFN(spMetadataFileName);
+        
         InputStream targetStream = file;
-        final String metadataFilePath  = samlIdpService.saveMetadataFile(
-                samlConfigService.getSpMetadataDir(),spMetadataFileName,Constants.SP_MODULE,targetStream);
-        log.debug("targetStream: {}, spMetadataDir: {}, spMetadataFileName: {}",targetStream,samlConfigService.getSpMetadataDir(),spMetadataFileName);
+        final String metadataFilePath  = shibbolethDocumentService.saveMetadataFile(
+                shibbolethConfigService.getSpMetadataDir(), spMetadataFileName, Constants.SP_MODULE, targetStream);
+        logger.debug("targetStream: {}, spMetadataDir: {}, spMetadataFileName: {}",targetStream, shibbolethConfigService.getSpMetadataDir(), spMetadataFileName);
         if(StringHelper.isNotEmpty(metadataFilePath)) {
-            trustRelationship.setSpMetaDataFN(metadataFilePath);
-            log.debug("SP Metadata file ' {} ' saved.",spMetadataFileName);
+            //trustRelationship.setSpMetaDataFN(metadataFilePath);
+            logger.debug("SP Metadata file ' {} ' saved.",spMetadataFileName);
             return true;
         }else {
-            log.error("Failed to save SP metadata file for TrustRelationship ' {} '",trustRelationship.getInum());
+            logger.error("Failed to save SP metadata file for TrustRelationship ' {} '",trustRelationship.getInum());
             return false;
         }
     }
@@ -258,8 +257,7 @@ public class ShibbolethService {
         String relationshipInum = StringHelper.removePunctuation(inum);
         logger.info("inum after remove punctuation is:{}",relationshipInum);
         
-        //TO-DO LAter
-        //return String.format(samlConfigService.getSpMetadataFilePattern(), relationshipInum);
+        return String.format(shibbolethConfigService.getSpMetadataFilePattern(), relationshipInum);
     }
     
     //----------------

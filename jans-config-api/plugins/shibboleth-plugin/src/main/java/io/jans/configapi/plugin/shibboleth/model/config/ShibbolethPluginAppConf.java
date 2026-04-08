@@ -22,7 +22,7 @@ public class ShibbolethPluginAppConf {
 
     @JsonObject
     @AttributeName(name = "jansConfDyn")
-    private SamlAppConfiguration dynamicConf;
+    private ShibbolethPluginConfiguration dynamicConf;
 
     @JsonObject
     @AttributeName(name = "jansConfStatic")
@@ -39,11 +39,11 @@ public class ShibbolethPluginAppConf {
         this.dn = dn;
     }
 
-    public SamlAppConfiguration getDynamicConf() {
+    public ShibbolethPluginConfiguration getDynamicConf() {
         return dynamicConf;
     }
 
-    public void setDynamicConf(SamlAppConfiguration dynamicConf) {
+    public void setDynamicConf(ShibbolethPluginConfiguration dynamicConf) {
         this.dynamicConf = dynamicConf;
     }
 

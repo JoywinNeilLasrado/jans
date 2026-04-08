@@ -6,7 +6,6 @@
 
 package io.jans.configapi.plugin.shibboleth.configuration;
 
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.BeforeDestroyed;
 import jakarta.enterprise.event.Observes;
@@ -25,31 +24,28 @@ public class ShibbolethPluginAppInitializer {
     Logger log;
 
     @Inject
-    SamlConfigurationFactory samlConfigurationFactory;
-
+    ShibbolethPluginConfigurationFactory shibbolethPluginConfigurationFactory;
 
     public void onAppStart() {
-        log.info("=============  Initializing SAML Plugin ========================");
+        log.info("=============  Initializing Shibboleth Plugin ========================");
 
         // configuration
-        this.samlConfigurationFactory.create();
+        this.shibbolethPluginConfigurationFactory.create();
 
-        log.info("==============  SAML Plugin IS UP AND RUNNING ===================");
+        log.info("==============  Shibboleth Plugin IS UP AND RUNNING ===================");
     }
-  
 
     public void destroy(@Observes @BeforeDestroyed(ApplicationScoped.class) ServletContext init) {
         log.info("================================================================");
-        log.info("===========  SAML Plugin STOPPED  ==========================");
+        log.info("===========  Shibboleth Plugin STOPPED  ==========================");
         log.info("init:{}", init);
         log.info("================================================================");
     }
 
     @Produces
     @ApplicationScoped
-    public SamlConfigurationFactory getSamlConfigurationFactory() {
-        return samlConfigurationFactory;
+    public ShibbolethPluginConfigurationFactory getShibbolethPluginConfigurationFactory() {
+        return shibbolethPluginConfigurationFactory;
     }
 
-   
 }

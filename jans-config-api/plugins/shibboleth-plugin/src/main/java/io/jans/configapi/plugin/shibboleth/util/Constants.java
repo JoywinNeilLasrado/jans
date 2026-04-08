@@ -4,6 +4,9 @@ public final class Constants {
     
     private Constants() {}
     
+    public static final String IDP_MODULE = "idp-module";
+    public static final String SP_MODULE = "sp-module";
+    
     public static final String SHIBBOLETH_READ_ACCESS = "https://jans.io/oauth/config/shibboleth/config.readonly";
     public static final String SHIBBOLETH_WRITE_ACCESS = "https://jans.io/oauth/config/shibboleth/config.write";
     public static final String SHIBBOLETH_ADMIN_ACCESS = "https://jans.io/oauth/config/shibboleth/config.admin";

@@ -8,8 +8,8 @@ package io.jans.configapi.plugin.shibboleth.configuration;
 
 import io.jans.as.common.service.common.ApplicationFactory;
 import io.jans.as.model.config.Constants;
-import io.jans.configapi.plugin.saml.model.config.SamlConf;
-import io.jans.configapi.plugin.saml.model.config.SamlAppConfiguration;
+import io.jans.configapi.plugin.shibboleth.model.config.ShibbolethPluginAppConf;
+import io.jans.configapi.plugin.shibboleth.model.config.ShibbolethPluginConfiguration;
 import io.jans.as.model.configuration.Configuration;
 import io.jans.exception.ConfigurationException;
 import io.jans.orm.PersistenceEntryManager;
@@ -43,7 +43,7 @@ import jakarta.inject.Named;
 @Priority(1)
 public class ShibbolethPluginConfigurationFactory {
 
-    public static final String SAML_CONFIGURATION_ENTRY_DN = "saml_ConfigurationEntryDN";
+    public static final String SHIBBOLETH_CONFIGURATION_ENTRY_DN = "shibbolethPlugin_ConfigurationEntryDN";
 
     static {
         if (System.getProperty("jans.base") != null) {
@@ -67,7 +67,7 @@ public class ShibbolethPluginConfigurationFactory {
     private Event<TimerEvent> timerEvent;
 
     @Inject
-    private Event<SamlAppConfiguration> samlConfigurationUpdateEvent;
+    private Event<ShibbolethPluginConfiguration> shibbolethPluginConfigurationUpdateEvent;
 
     @Inject
     private Event<String> event;
@@ -84,7 +84,7 @@ public class ShibbolethPluginConfigurationFactory {
 
     // timer events
     public static final String PERSISTENCE_CONFIGUARION_RELOAD_EVENT_TYPE = "persistenceConfigurationReloadEvent";
-    public static final String SAML_BASE_CONFIGURATION_RELOAD_EVENT_TYPE = "saml_baseConfigurationReloadEvent";
+    public static final String SHIBBOLETH_BASE_CONFIGURATION_RELOAD_EVENT_TYPE = "shibboleth_baseConfigurationReloadEvent";
 
     private static final int DEFAULT_INTERVAL = 30; // 30 seconds
     private AtomicBoolean isActive;
@@ -95,60 +95,59 @@ public class ShibbolethPluginConfigurationFactory {
     private static final String DIR = BASE_DIR + File.separator + "conf" + File.separator;
     private static final String BASE_PROPERTIES_FILE = DIR + Constants.BASE_PROPERTIES_FILE_NAME;
 
-    // saml config
-    public static final String SAML_CONFIGURATION_ENTRY = "saml_ConfigurationEntryDN";
-    private SamlAppConfiguration samlAppConfiguration;
-    private boolean samlConfigLoaded = false;
-    private long samlLoadedRevision = -1;
+    // shibboleth config
+    public static final String SHIBBOLETH_CONFIGURATION_ENTRY = "shibboleth_ConfigurationEntryDN";
+    private ShibbolethPluginConfiguration shibbolethPluginConfiguration;
+    private boolean shibbolethPluginAppConfigLoaded = false;
+    private long shibbolethLoadedRevision = -1;
     private FileConfiguration baseConfiguration;
-    
-    public String getSamlConfigurationDn() {
-        return this.baseConfiguration.getString(SAML_CONFIGURATION_ENTRY_DN);
+
+    public String getShibbolethPluginAppConfigurationDn() {
+        return this.baseConfiguration.getString(SHIBBOLETH_CONFIGURATION_ENTRY_DN);
     }
-    
+
     public FileConfiguration getBaseConfiguration() {
         return baseConfiguration;
     }
 
     @PostConstruct
     public void init() {
-        log.info("Initializing SamlConfigurationFactory ");
+        log.info("Initializing ShibbolethPluginAppConfigurationFactory ");
         this.isActive = new AtomicBoolean(true);
         try {
-            
+
             loadBaseConfiguration();
 
         } finally {
             this.isActive.set(false);
         }
     }
-    
+
     @Produces
     @ApplicationScoped
-    public SamlAppConfiguration getSamlAppConfiguration() {
-        return samlAppConfiguration;
+    public ShibbolethPluginConfiguration getShibbolethPluginConfiguration() {
+        return shibbolethPluginConfiguration;
     }
 
-    
     public void create() {
-        log.info("Loading SAML Configuration");
+        log.info("Loading Shibboleth Configuration");
 
-        // load SAML config from DB
-        if (!loadSamlConfigFromDb()) {
-            log.error("Failed to load SAML configuration from persistence. Please fix it!!!.");
-            throw new ConfigurationException("Failed to load SAML configuration from persistence.");
+        // load shibboleth config from DB
+        if (!loadShibbolethPluginAppConfigFromDb()) {
+            log.error("Failed to load Shibboleth configuration from persistence. Please fix it!!!.");
+            throw new ConfigurationException("Failed to load Shibboleth configuration from persistence.");
         } else {
-            log.info("SAML Configuration loaded successfully - samlLoadedRevision:{}, samlAppConfiguration:{}",
-                    this.samlLoadedRevision, getSamlAppConfiguration());
+            log.info(
+                    "Shibboleth Configuration loaded successfully - shibbolethLoadedRevision:{}, ShibbolethPluginConfiguration:{}",
+                    this.shibbolethLoadedRevision, getShibbolethPluginConfiguration());
         }
 
-       
     }
 
-    public String getSamlAppConfigurationDn() {
-        return this.baseConfiguration.getString(SAML_CONFIGURATION_ENTRY);
+    public String getShibbolethPluginConfigurationDn() {
+        return this.baseConfiguration.getString(SHIBBOLETH_CONFIGURATION_ENTRY);
     }
-    
+
     public String getConfigurationDn(String key) {
         return this.baseConfiguration.getString(key);
     }
@@ -173,23 +172,24 @@ public class ShibbolethPluginConfigurationFactory {
         }
     }
 
-    private boolean loadSamlConfigFromDb() {
+    private boolean loadShibbolethPluginAppConfigFromDb() {
         log.debug("Loading Api configuration from '{}' DB...", baseConfiguration.getString("persistence.type"));
         try {
-            final SamlConf samlConf = loadConfigurationFromDb(getConfigurationDn(SAML_CONFIGURATION_ENTRY),
-                    new SamlConf());
-            log.trace("Conf configuration '{}' DB...", samlConf);
+            final ShibbolethPluginAppConf shibbolethPluginAppConf = loadConfigurationFromDb(
+                    getConfigurationDn(SHIBBOLETH_CONFIGURATION_ENTRY), new ShibbolethPluginAppConf());
+            log.trace("Conf configuration '{}' DB...", shibbolethPluginAppConf);
 
-            if (samlConf != null) {
-                initSamlConf(samlConf);
+            if (shibbolethPluginAppConf != null) {
+                initShibbolethPluginAppConf(shibbolethPluginAppConf);
 
                 // Destroy old configuration
-                if (this.samlConfigLoaded) {
-                    destroy(SamlAppConfiguration.class);
+                if (this.shibbolethPluginAppConfigLoaded) {
+                    destroy(ShibbolethPluginConfiguration.class);
                 }
 
-                this.samlConfigLoaded = true;
-                samlConfigurationUpdateEvent.select(ConfigurationUpdate.Literal.INSTANCE).fire(samlAppConfiguration);
+                this.shibbolethPluginAppConfigLoaded = true;
+                shibbolethPluginConfigurationUpdateEvent.select(ConfigurationUpdate.Literal.INSTANCE)
+                        .fire(shibbolethPluginConfiguration);
 
                 return true;
             }
@@ -199,25 +199,27 @@ public class ShibbolethPluginConfigurationFactory {
         return false;
     }
 
-    private void initSamlConf(SamlConf samlConf) {
-        log.debug("Initializing SAML Configuration From DB.... samlConf:{}", samlConf);
+    private void initShibbolethPluginAppConf(ShibbolethPluginAppConf shibbolethPluginAppConf) {
+        log.debug("Initializing Shibboleth Configuration From DB.... shibbolethPluginAppConf:{}",
+                shibbolethPluginAppConf);
 
-        if (samlConf == null) {
-            throw new ConfigurationException("Failed to load SAML Configuration From DB " + samlConf);
+        if (shibbolethPluginAppConf == null) {
+            throw new ConfigurationException(
+                    "Failed to load shibboleth Configuration From DB " + shibbolethPluginAppConf);
         }
 
-        log.info("samlAppConfigurationFromDb:{}",samlConf);
-        if (samlConf.getDynamicConf() != null) {
-            this.samlAppConfiguration = samlConf.getDynamicConf();
+        log.info("ShibbolethPluginConfigurationFromDb:{}", shibbolethPluginAppConf);
+        if (shibbolethPluginAppConf.getDynamicConf() != null) {
+            this.shibbolethPluginConfiguration = shibbolethPluginAppConf.getDynamicConf();
         }
 
-        this.samlLoadedRevision = samlConf.getRevision();
+        this.shibbolethLoadedRevision = shibbolethPluginAppConf.getRevision();
 
-        log.debug("*** samlAppConfiguration:{}, samlLoadedRevision:{} ",
-                this.samlAppConfiguration, samlLoadedRevision);
+        log.debug("*** shibbolethPluginConfiguration:{}, shibbolethLoadedRevision:{} ",
+                this.shibbolethPluginConfiguration, shibbolethLoadedRevision);
 
     }
-    
+
     private <T> T loadConfigurationFromDb(String dn, T obj, String... returnAttributes) {
         log.debug("loadConfigurationFromDb dn:{}, clazz:{}, returnAttributes:{}", dn, obj, returnAttributes);
         final PersistenceEntryManager persistenceEntryManager = persistenceEntryManagerInstance.get();
@@ -229,23 +231,24 @@ public class ShibbolethPluginConfigurationFactory {
         }
     }
 
-    private boolean isSamlRevisionIncreased() {
-        final SamlConf samlConf = loadConfigurationFromDb(getConfigurationDn(SAML_CONFIGURATION_ENTRY_DN),
-                new SamlConf(), "jansRevision");
-        if (samlConf == null) {
+    private boolean isShibbolethPluginRevisionIncreased() {
+        final ShibbolethPluginAppConf shibbolethPluginAppConf = loadConfigurationFromDb(
+                getConfigurationDn(SHIBBOLETH_CONFIGURATION_ENTRY_DN), new ShibbolethPluginAppConf(), "jansRevision");
+        if (shibbolethPluginAppConf == null) {
             return false;
         }
 
-        log.debug("Saml Config - DB revision: {}, server revision: {}", samlConf.getRevision(), samlLoadedRevision);
-        return samlConf.getRevision() > this.samlLoadedRevision;
+        log.debug("Shibboleth Config - DB revision: {}, server revision: {}", shibbolethPluginAppConf.getRevision(),
+                shibbolethLoadedRevision);
+        return shibbolethPluginAppConf.getRevision() > this.shibbolethLoadedRevision;
     }
 
-    public boolean reloadSamlConfFromLdap() {
+    public boolean reloadShibbolethPluginAppConfFromLdap() {
         log.debug("Reload api configuration TimerEvent");
-        if (!isSamlRevisionIncreased()) {
+        if (!isShibbolethPluginRevisionIncreased()) {
             return false;
         }
-        return this.loadSamlConfigFromDb();
+        return this.loadShibbolethPluginAppConfigFromDb();
     }
 
     public void destroy(Class<? extends Configuration> clazz) {
@@ -274,7 +277,8 @@ public class ShibbolethPluginConfigurationFactory {
             if (lastModified > baseConfigurationFileLastModifiedTime) {
                 // Reload configuration only if it was modified
                 loadBaseConfiguration();
-                event.select(BaseConfigurationReload.Literal.INSTANCE).fire(SAML_BASE_CONFIGURATION_RELOAD_EVENT_TYPE);
+                event.select(BaseConfigurationReload.Literal.INSTANCE)
+                        .fire(SHIBBOLETH_BASE_CONFIGURATION_RELOAD_EVENT_TYPE);
             }
         }
 
@@ -287,7 +291,7 @@ public class ShibbolethPluginConfigurationFactory {
         }
 
         try {
-            reloadSamlConfFromLdap();
+            reloadShibbolethPluginAppConfFromLdap();
         } catch (Exception ex) {
             log.error("Exception happened while reloading application configuration", ex);
         } finally {
